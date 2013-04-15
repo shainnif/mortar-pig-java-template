@@ -15,9 +15,11 @@ import org.apache.pig.ResourceSchema;
 import org.apache.pig.ResourceStatistics;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigSplit;
+import org.apache.pig.bzip2r.Bzip2TextInputFormat;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
+import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 import org.apache.pig.impl.util.ObjectSerializer;
@@ -45,18 +47,36 @@ public class TemplateLoaderStaticSchema extends LoadFunc implements LoadMetadata
     private String udfContextSignature = null;
     private static final String REQUIRED_FIELDS_SIGNATURE = "pig.templateloaderstaticschema.required_fields";
 
+    private String inputFormatClassName = null;
+    private String loadLocation;
+
     public TemplateLoaderStaticSchema() {
         fields = getSchema().getFields();
     }
 
     @Override
     public void setLocation(String location, Job job) throws IOException {
+        loadLocation = location;
         FileInputFormat.setInputPaths(job, location);
     }
 
     @Override
     public InputFormat getInputFormat() throws IOException {
-        return new TextInputFormat();
+        // if not manually set in options string
+        if (inputFormatClassName == null) {
+            if (loadLocation.endsWith(".bz2") || loadLocation.endsWith(".bz")) {
+                inputFormatClassName = Bzip2TextInputFormat.class.getName();
+            } else {
+                inputFormatClassName = TextInputFormat.class.getName();
+            }
+        }
+        try {
+            return (FileInputFormat) PigContext.resolveClassName(inputFormatClassName).newInstance();
+        } catch (InstantiationException e) {
+            throw new IOException("Failed creating input format " + inputFormatClassName, e);
+        } catch (IllegalAccessException e) {
+            throw new IOException("Failed creating input format " + inputFormatClassName, e);
+        }
     }
 
     @Override
@@ -123,7 +143,7 @@ public class TemplateLoaderStaticSchema extends LoadFunc implements LoadMetadata
     }
 
     public void setPartitionFilter(Expression expression) throws IOException {
-        // empty
+        // intentionally not implemented
     }
 
     public List<OperatorSet> getFeatures() {
