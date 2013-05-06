@@ -43,14 +43,16 @@ public class BagTupleExampleUDF extends EvalFunc<DataBag> {
     }
 
     public Schema outputSchema(Schema input) {
+        // Function returns a bag with this schema: { (Double), (Double) }
+        // Thus the outputSchema type should be a Bag containing a Double
         try{
             Schema bagSchema = new Schema();
-            bagSchema.add(new Schema.FieldSchema("number", DataType.DOUBLE));
+            bagSchema.add(new Schema.FieldSchema("result_field", DataType.DOUBLE));
 
-            return new Schema(new Schema.FieldSchema(getSchemaName(this.getClass().getName().toLowerCase(), input),
-                    bagSchema, DataType.BAG));
-        }catch (Exception e){
-            return null;
+            String schemaName =  getSchemaName(this.getClass().getName().toLowerCase(), input);
+            return new Schema(new Schema.FieldSchema(schemaName, bagSchema, DataType.BAG));
+        } catch (Exception e){
+            throw new RuntimeException(e);
         }
     }
 }

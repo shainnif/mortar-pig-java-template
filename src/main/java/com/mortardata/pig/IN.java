@@ -11,6 +11,14 @@ import org.apache.pig.data.Tuple;
 
 /**
  * SQL IN for Pig.
+ *
+ * Example Filter function: returns Boolean, can only be used in a FILTER statement.
+ *
+ * Ex:
+ *
+ * DEFINE IN com.mortardata.pig.IN('3,5,7');
+ *
+ * FILTER my_relation by IN(first_field);
  */
 public class IN extends FilterFunc {
 
