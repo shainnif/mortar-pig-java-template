@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Template for a basic Pig Loader
  */
-public class TemplateLoader extends LoadFunc {
+public abstract class TemplateLoader extends LoadFunc {
 
     protected RecordReader reader = null;
     private TupleFactory tupleFactory = TupleFactory.getInstance();
@@ -71,7 +71,7 @@ public class TemplateLoader extends LoadFunc {
             }
             Text value = (Text) reader.getCurrentValue();
 
-            //TODO: parse record into component fields, add to values in order
+            values = parseValue(value);
 
             return tupleFactory.newTuple(values);
         } catch (InterruptedException e) {
@@ -81,7 +81,8 @@ public class TemplateLoader extends LoadFunc {
                     PigException.REMOTE_ENVIRONMENT, e);
         }
     }
-
-
+    
+    //TODO: parse record into component fields, add to values in order
+    public abstract List parseValue(Text value);
 
 }
